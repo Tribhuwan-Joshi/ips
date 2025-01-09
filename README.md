@@ -75,7 +75,7 @@ POST /images/:id/transform
 ```
 
 ```js
-POST /register
+POST /auth/register
 {
   "username": "user1",
   "password": "password123"
@@ -83,7 +83,7 @@ POST /register
 ```
 
 ```js
-POST /login
+POST /auth/login
 {
   "username": "user1",
   "password": "password123"
