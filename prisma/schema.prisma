@@ -12,3 +12,35 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// create schema for user
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  password String
+  images   Image[]
+}
+
+model Image {
+  id           Int      @id @default(autoincrement())
+  originalName String
+  path         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  owner        User?    @relation(fields: [userId], references: [id])
+  userId       Int?
+
+  publicLink ImageShare?
+}
+
+model ImageShare {
+  id          String   @id @default(uuid())
+  image       Image    @relation(fields: [imageId], references: [id])
+  imageId     Int      @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiredAt   DateTime
+  isExpired   Boolean  @default(false) // I will set it to true when expiredAt < current unix time
+  accessCount Int      @default(0)
+}
