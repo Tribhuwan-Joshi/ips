@@ -1,6 +1,7 @@
 const prisma = require('../prisma/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET, REFRESH_SECRET } = require('../utils/config');
 
 const handleRegister = async (req, res) => {
   const { username, password } = req.body;
@@ -14,6 +15,9 @@ const handleRegister = async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = await prisma.user.create({
     data: { username, password: hashedPassword },
+    omit: {
+      password: true,
+    },
   }); // create new user
 
   // generate a jwt token

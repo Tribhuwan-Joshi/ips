@@ -95,14 +95,18 @@ DELETE /images/:id
 ```
 
 ```js
-POST /share/images/:id
+POST /images/:id/share
+```
+
+```js
+DELETE /images/:id/share
 ```
 
 ```js
 // return image that binds to specific shareid
-GET /share/images/:shareid;
+GET /images/shared/:shareid;
 ```
 
 ```js
-GET / storage / info; // return total storage and storage used
+GET / user / info; // return total storage and storage used
 ```
