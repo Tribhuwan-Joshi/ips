@@ -6,7 +6,7 @@ const handleRegister = async (req, res) => {
   const { username, password } = req.body;
   if (username.length < 6 || password.length < 6)
     return res.status(400).json({ message: 'Invalid input' });
-  const user = await prisma.user.findOne({ username }); // check if user exist
+  const user = await prisma.user.findUnique({ where: { username } }); // check if user exist
   if (user) {
     return res.status(409).json({ message: 'user already exist' });
   }
@@ -24,7 +24,7 @@ const handleLogin = async (req, res) => {
   const { username, password } = req.body;
   if (username.length < 6 || password.length < 6)
     return res.status(400).json({ message: 'Invalid input' });
-  const user = await prisma.user.findOne({ username }); // check if user exist
+  const user = await prisma.user.findUnique({ where: { username } }); // check if user exist
   if (!user) {
     return res.status(404).json({ message: 'user do not exist' });
   }
