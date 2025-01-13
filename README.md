@@ -3,7 +3,7 @@
 ## Tech stack
 
 - Express - NodeJs framework
-- Storage - Cloudflare R2
+- Storage - Supabase
 - DB - Postgresql
 - ORM - Prisma
 - Authentication - JWT + refresh token
