@@ -17,6 +17,7 @@ app.get('/', (req, res) =>
   res.send('This is a image processing and upload service').status(200)
 );
 app.use('/auth', authRouter);
+app.use(extractUser);
 app.use('/users', userRouter);
 app.use('/images', imageRouter);
 
