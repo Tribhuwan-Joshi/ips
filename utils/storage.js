@@ -1,9 +1,9 @@
-const { PROJECT_URL, API_KEY } = require('./config');
 const { StorageClient } = require('@supabase/storage-js');
+const config = require('./config');
+const supabaseUrl = config.STORAGE_URL;
+const supabaseKey = config.API_KEY;
 
-const storageClient = new StorageClient(PROJECT_URL, {
-  apiKey: API_KEY,
-  Authorization: `Bearer ${API_KEY}`,
+module.exports = new StorageClient(supabaseUrl, {
+  apikey: supabaseKey,
+  Authorization: `Bearer ${supabaseKey}`,
 });
-
-module.exports = StorageClient;
