@@ -1,5 +1,6 @@
 const multer = require('multer');
 const { saveImage } = require('../utils/helpers');
+const prisma = require('../prisma/prisma');
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -29,4 +30,14 @@ const handleUpload = async (req, res) => {
 
 const uploadMiddleware = [upload.array('images'), handleUpload];
 
-module.exports = { uploadMiddleware };
+const getAllImages = async (req, res) => {
+  const userId = req.user.id;
+  const allImages = await prisma.image.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+  res.status(200).json({ message: 'Fetched all images', data: allImages });
+};
+
+module.exports = { uploadMiddleware, getAllImages };
