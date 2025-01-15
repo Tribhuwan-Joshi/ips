@@ -1,6 +1,7 @@
 const multer = require('multer');
 const { saveImage } = require('../utils/helpers');
 const prisma = require('../prisma/prisma');
+const storage = require('../utils/storage');
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -40,4 +41,39 @@ const getAllImages = async (req, res) => {
   res.status(200).json({ message: 'Fetched all images', data: allImages });
 };
 
-module.exports = { uploadMiddleware, getAllImages };
+const getImagewithId = async (req, res) => {
+  const id = parseInt(req.params.id);
+  const image = await prisma.image.findUnique({
+    where: {
+      id: id,
+    },
+  });
+
+  return res.status(200).json({ image: image });
+};
+
+const deleteImagewithId = async (req, res) => {
+  const id = parseInt(req.params.id);
+  // remove from postgresql
+  const { path } = await prisma.image.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      path: true,
+    },
+  });
+  await storage.from('images').remove([path]);
+  await prisma.image.delete({
+    where: {
+      id: id,
+    },
+  });
+  return res.status(200).json({ message: `deleted image with id ${id}` });
+};
+module.exports = {
+  deleteImagewithId,
+  uploadMiddleware,
+  getAllImages,
+  getImagewithId,
+};
