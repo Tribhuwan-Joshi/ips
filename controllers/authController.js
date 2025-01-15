@@ -56,7 +56,7 @@ const handleLogin = async (req, res) => {
 };
 
 const handleRefreshToken = async (req, res) => {
-  const refreshtoken = req.cookies['refreshToken'];
+  const refreshtoken = req.cookies['refreshtoken'];
   if (!refreshtoken) {
     return res
       .status(401)

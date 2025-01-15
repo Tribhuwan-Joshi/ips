@@ -15,6 +15,17 @@ const saveImage = async (file, req) => {
       .upload(storagePath, decoded, {
         contentType: file.mimetype,
       });
+    console.log(data);
+    const publicUrl = storage.from('images').getPublicUrl(data.path);
+    // save image to db
+    const image = await prisma.image.create({
+      data: {
+        originalName: file.originalname,
+        path: data.path,
+        publicLink: publicUrl.data.publicUrl,
+        userId: req.user.id,
+      },
+    });
 
     if (error) {
       throw error;

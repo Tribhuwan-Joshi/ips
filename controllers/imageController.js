@@ -21,6 +21,7 @@ const handleUpload = async (req, res) => {
       await saveImage(file, req);
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error });
   }
   return res.status(201).json({ message: 'Image uploaded successfully' });
