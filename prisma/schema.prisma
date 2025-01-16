@@ -16,16 +16,19 @@ datasource db {
 // create schema for user
 
 model User {
-  id       Int     @id @default(autoincrement())
-  username String  @unique
-  password String
-  images   Image[]
+  id           Int     @id @default(autoincrement())
+  username     String  @unique
+  password     String
+  images       Image[]
+  initialLimit Int     @default(5242880) // 5 mb
+  storageLeft  Int     @default(5242880)
 }
 
 model Image {
   id           Int      @id @default(autoincrement())
   originalName String
   path         String
+  size         Int
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   owner        User?    @relation(fields: [userId], references: [id])

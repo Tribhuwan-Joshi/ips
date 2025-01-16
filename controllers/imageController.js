@@ -18,15 +18,33 @@ const handleUpload = async (req, res) => {
   if (!files.length) {
     return res.status(400).json({ message: 'Please provide a valid image' });
   }
+  const totalSize = files.reduce((res, file) => res + file.size, 0);
+  if (totalSize > req.user.storageLeft) {
+    return res.status(403).json({
+      error: 'User storage limit exceeded. Unable to upload these file(s).',
+      storageLeft: req.user.storageLeft,
+    });
+  }
   try {
     for (let file of files) {
-      await saveImage(file, req);
+      await saveImage(file, req, res);
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error });
   }
-  return res.status(201).json({ message: 'Image uploaded successfully' });
+  await prisma.user.update({
+    data: {
+      storageLeft: req.user.storageLeft - totalSize,
+    },
+    where: {
+      id: req.user.id,
+    },
+  });
+  return res.status(201).json({
+    message: 'Image uploaded successfully',
+    storageLeft: req.user.storageLeft - totalSize,
+  });
 };
 
 const uploadMiddleware = [upload.array('images'), handleUpload];
@@ -48,6 +66,9 @@ const getImagewithId = async (req, res) => {
       id: id,
     },
   });
+  if (!image) return res.status(404).json({ error: 'Image not found' });
+  if (image.userId != req.user.id)
+    return res.status(403).json({ error: 'Forbidden' });
 
   return res.status(200).json({ image: image });
 };
@@ -55,21 +76,40 @@ const getImagewithId = async (req, res) => {
 const deleteImagewithId = async (req, res) => {
   const id = parseInt(req.params.id);
   // remove from postgresql
-  const { path } = await prisma.image.findUnique({
+  const img = await prisma.image.findUnique({
     where: {
       id: id,
     },
     select: {
       path: true,
+      userId: true,
+      size: true,
     },
   });
+  if (!img) return res.status(404).json({ error: 'Image not found' });
+  const { path, userId, size } = img;
+  if (userId != req.user.id)
+    return res.status(403).json({ error: 'Forbidden' });
   await storage.from('images').remove([path]);
+
   await prisma.image.delete({
     where: {
       id: id,
     },
   });
-  return res.status(200).json({ message: `deleted image with id ${id}` });
+  await prisma.user.update({
+    data: {
+      storageLeft: req.user.storageLeft + size,
+    },
+    where: {
+      id: req.user.id,
+    },
+  });
+
+  return res.status(200).json({
+    message: `deleted image with id ${id}`,
+    storageLeft: req.user.storageLeft + size,
+  });
 };
 module.exports = {
   deleteImagewithId,

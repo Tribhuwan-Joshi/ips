@@ -4,29 +4,30 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET, REFRESH_SECRET } = require('../utils/config');
 
 const handleRegister = async (req, res) => {
-  const { username, password } = req.body;
-  if (username.length < 6 || password.length < 6)
-    return res.status(400).json({ message: 'Invalid input' });
-  const user = await prisma.user.findUnique({ where: { username } }); // check if user exist
-  if (user) {
-    return res.status(409).json({ message: 'user already exist' });
-  }
-  // now create new user, encrypt password using bcrypt-json
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = await prisma.user.create({
-    data: { username, password: hashedPassword },
-    omit: {
-      password: true,
-    },
-  }); // create new user
+  try {
+    const { username, password } = req.body;
+    if (username.length < 4 || password.length < 6)
+      return res.status(400).json({ message: 'Invalid input' });
+    const user = await prisma.user.findUnique({ where: { username } }); // check if user exist
+    if (user) {
+      return res.status(409).json({ message: 'user already exist' });
+    }
+    // now create new user, encrypt password using bcrypt-json
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.create({
+      data: { username, password: hashedPassword },
+    }); // create new user
 
-  // generate a jwt token
-  res.status(200).json({ user: newUser });
+    // generate a jwt token
+    res.status(200).json({ message: 'Registered successfully. Please login' });
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
 };
 
 const handleLogin = async (req, res) => {
   const { username, password } = req.body;
-  if (username.length < 6 || password.length < 6)
+  if (username.length < 4 || password.length < 6)
     return res.status(400).json({ message: 'Invalid input' });
   const user = await prisma.user.findUnique({ where: { username } }); // check if user exist
   if (!user) {

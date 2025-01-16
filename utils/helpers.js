@@ -6,10 +6,12 @@ const saveImage = async (file, req) => {
   try {
     const decoded = decode(file.buffer.toString('base64'));
     const originalName = file.originalname;
+
     const storagePath = `${
       req.user.username
     }/${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     console.log('storage path is ', storagePath);
+
     const { data, error } = await storage
       .from('images')
       .upload(storagePath, decoded, {
@@ -18,12 +20,13 @@ const saveImage = async (file, req) => {
     console.log(data);
     const publicUrl = storage.from('images').getPublicUrl(data.path);
     // save image to db
-    const image = await prisma.image.create({
+    await prisma.image.create({
       data: {
         originalName: file.originalname,
         path: data.path,
         publicLink: publicUrl.data.publicUrl,
         userId: req.user.id,
+        size: file.size,
       },
     });
 
