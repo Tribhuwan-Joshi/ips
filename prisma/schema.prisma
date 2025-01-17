@@ -34,15 +34,18 @@ model Image {
   owner        User?    @relation(fields: [userId], references: [id])
   userId       Int?
   publicLink   String
+
+  imageShareId String?
+  ImageShare   ImageShare?
 }
 
-// model ImageShare {
-//   id          String   @id @default(uuid())
-//   image       Image    @relation(fields: [imageId], references: [id])
-//   imageId     Int      @unique
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-//   expiredAt   DateTime
-//   isExpired   Boolean  @default(false) // I will set it to true when expiredAt < current unix time
-//   accessCount Int      @default(0)
-// }
+model ImageShare {
+  id          String   @id @default(uuid())
+  image       Image    @relation(fields: [imageId], references: [id])
+  imageId     Int      @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiredAt   DateTime
+  isExpired   Boolean  @default(false) // I will set it to true when expiredAt < current unix time
+  accessCount Int      @default(0)
+}

@@ -11,11 +11,14 @@ const upload = multer({
   },
 });
 
+const jwt = require('jsonwebtoken');
+const config = require('../utils/config');
+
 const handleUpload = async (req, res) => {
   // save to supabase directly for now
   const files = req.files;
   console.log(files);
-  if (!files.length) {
+  if (!files || !files.length) {
     return res.status(400).json({ message: 'Please provide a valid image' });
   }
   const totalSize = files.reduce((res, file) => res + file.size, 0);
@@ -111,7 +114,50 @@ const deleteImagewithId = async (req, res) => {
     storageLeft: req.user.storageLeft + size,
   });
 };
+
+const getSharedImage = async (req, res) => {
+  try {
+    const shareId = req.params.id;
+    const { url } = jwt.verify(shareId, config.SHARE_SECRET);
+    res.status(200).json({ url: url });
+    // or redirect user
+    // res.redirect(url)
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
+};
+
+const shareImage = async (req, res) => {
+  try {
+    const { ttl } = req.body;
+    if (!ttl)
+      return res
+        .status(400)
+        .json({ message: 'Please provide valid timeperiod in ms' });
+    const id = parseInt(req.params.id);
+    const img = await prisma.image.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    if (!img || img.userId != req.user.id) {
+      return res.status(404).json({ error: 'Invalid image id to share' });
+    }
+
+    const url = img.publicLink;
+    const token = jwt.sign({ url: url }, config.SHARE_SECRET, {
+      expiresIn: ttl,
+    });
+    res.status(201).json({ message: 'Image is public now', token: token });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+};
+
 module.exports = {
+  shareImage,
+  getSharedImage,
   deleteImagewithId,
   uploadMiddleware,
   getAllImages,
