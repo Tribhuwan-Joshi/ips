@@ -53,11 +53,16 @@ const handleUpload = async (req, res) => {
 const uploadMiddleware = [upload.array('images'), handleUpload];
 
 const getAllImages = async (req, res) => {
+  const page = req.query.page || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
   const userId = req.user.id;
   const allImages = await prisma.image.findMany({
     where: {
       userId: userId,
     },
+    skip: skip,
+    take: limit,
   });
   res.status(200).json({ message: 'Fetched all images', data: allImages });
 };
