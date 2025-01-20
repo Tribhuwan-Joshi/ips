@@ -2,6 +2,7 @@ const multer = require('multer');
 const { saveImage } = require('../utils/helpers');
 const prisma = require('../prisma/prisma');
 const storage = require('../utils/storage');
+const ffmpeg = require('fluent-ffmpeg');
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -177,8 +178,22 @@ const transformImage = async (req, res) => {
   if (!image || image.userId != req.user.id) {
     return res.status(404).json({ error: 'Image not found. Invalid id' });
   }
+  const transformations = req.body.transformations;
+  /*
+Resize - width , height
+Crop - width , height , x ,y
+Rotate - number
+Watermark - string
+Flip - boolean
+Mirror - boolean
+Compress
+Change format (JPEG, PNG, etc.) - string 
+Apply filters (grayscale, sepia, etc.) - grayscale,sepia
+*/
 
-  console.log(image.publicLink);
+  const proc = ffmpeg(image.publicLink, { timeout: 10000 });
+  proc.format(transformations.format);
+  console.log(proc);
   res.status(200).json({ url: image.publicLink, path: image.path });
 };
 

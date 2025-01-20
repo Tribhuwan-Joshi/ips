@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('./config');
 const prisma = require('../prisma/prisma');
+const redis = require('./redisClient');
 
 const extractUser = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -29,5 +30,63 @@ const extractUser = async (req, res, next) => {
     return res.status(401).json({ message: 'Invalid token' });
   }
 };
+/**
+ * @params WS Number Window size in seconds
+ * @param AUTH_LIMIT Number number of request allowed
+ * @param THROTTLE_DELAY Number of seconds in throttle seconds
+ * @param THROTTLE_LIMIT
+ */
 
-module.exports = { extractUser };
+const authLimit =
+  (WS, AUTH_LIMIT, THROTTLE_DELAY, THROTTLE_LIMIT) =>
+  async (req, res, next) => {
+    const currentTime = Date.now();
+    try {
+      const key = req.user.id;
+      const rqs = await redis.lrange(key, 0, -1);
+      const allowed = rqs.filter((t) => t >= currentTime - WS);
+      if (allowed.length > AUTH_LIMIT) {
+        return res.status(429).json({ error: 'Too many requests' });
+      }
+      if (allowed.length > THROTTLE_LIMIT) {
+        await new Promise((res) => setTimeout(res, THROTTLE_DELAY));
+      }
+      await redis
+        .multi()
+        .lpush(key, currentTime)
+        .expire(key, W / 1000)
+        .exec();
+      next();
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  };
+
+const rateLimit =
+  (WS, RATE_LIMIT, THROTTLE_DELAY, THROTTLE_LIMIT) =>
+  async (req, res, next) => {
+    const currentTime = Date.now();
+    try {
+      const key = req.user.id;
+      const rqs = await redis.lrange(key, 0, -1);
+      const allowed = rqs.filter((t) => t >= currentTime - WS);
+      if (allowed.length > RATE_LIMIT) {
+        return res
+          .status(429)
+          .json({ error: 'Too many  attempts to authenticate' });
+      }
+      if (allowed.length > THROTTLE_LIMIT) {
+        await new Promise((res, rej) => setTimeout(res, THROTTLE_DELAY));
+      }
+      await redis
+        .multi()
+        .lpush(key, currentTime)
+        .expire(key, W / 1000)
+        .exec();
+      next();
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  };
+
+module.exports = { extractUser, rateLimit, authLimit };
