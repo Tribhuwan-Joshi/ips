@@ -2,6 +2,7 @@ const multer = require('multer');
 const { saveImage } = require('../utils/helpers');
 const prisma = require('../prisma/prisma');
 const storage = require('../utils/storage');
+const redis = require('../utils/redisClient');
 const ffmpeg = require('fluent-ffmpeg');
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -69,17 +70,50 @@ const getAllImages = async (req, res) => {
 };
 
 const getImagewithId = async (req, res) => {
-  const id = parseInt(req.params.id);
-  const image = await prisma.image.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  if (!image) return res.status(404).json({ error: 'Image not found' });
-  if (image.userId != req.user.id)
-    return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const id = req.params.id;
+    const lkey = `${req.user.id}/imgid`;
+    const hkey = `${req.user.id}/imgdata`;
+    const CACHE_SIZE = 10;
 
-  return res.status(200).json({ image: image });
+    const list = await redis.lrange(lkey, 0, -1);
+    const isCached = list.includes(id);
+
+    if (isCached) {
+      console.log('Cache hit!');
+
+      await redis.lrem(lkey, 0, id);
+      await redis.lpush(lkey, id);
+
+      // Return cached image
+      const cachedImage = await redis.hget(hkey, id);
+      return res
+        .status(200)
+        .json({ image: JSON.parse(cachedImage), redis: 'hit' });
+    }
+
+    console.log('Cache miss! Fetching from DB...');
+    const image = await prisma.image.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!image) return res.status(404).json({ error: 'Image not found' });
+    if (image.userId !== req.user.id)
+      return res.status(403).json({ error: 'Forbidden' });
+
+    if (list.length >= CACHE_SIZE) {
+      const oldestId = await redis.rpop(lkey); // Remove LRU item
+      await redis.hdel(hkey, oldestId);
+    }
+
+    await redis.lpush(lkey, id);
+    await redis.hset(hkey, id, JSON.stringify(image));
+
+    return res.status(200).json({ image, redis: 'miss' });
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
 
 const deleteImagewithId = async (req, res) => {
