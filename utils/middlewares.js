@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('./config');
+const { JWT_SECRET, WSIZE, RLIMIT, ALIMIT } = require('./config');
 const prisma = require('../prisma/prisma');
 const redis = require('./redisClient');
 
@@ -30,63 +30,30 @@ const extractUser = async (req, res, next) => {
     return res.status(401).json({ message: 'Invalid token' });
   }
 };
-/**
- * @params WS Number Window size in seconds
- * @param AUTH_LIMIT Number number of request allowed
- * @param THROTTLE_DELAY Number of seconds in throttle seconds
- * @param THROTTLE_LIMIT
- */
+const limiter = (limit, group) => async (req, res, next) => {
+  try {
+    const key = `${req.ip}/${group}`;
+    const currTime = Date.now();
+    await redis.zremrangebyscore(key, 0, currTime - WSIZE);
+    const rqs = await redis.zcard(key);
+    if (rqs >= limit) {
+      const firstReq = Number((await redis.zrange(key, 0, 0))[0]);
+      const cooldown = firstReq + WSIZE - currTime;
 
-const authLimit =
-  (WS, AUTH_LIMIT, THROTTLE_DELAY, THROTTLE_LIMIT) =>
-  async (req, res, next) => {
-    const currentTime = Date.now();
-    try {
-      const key = req.user.id;
-      const rqs = await redis.lrange(key, 0, -1);
-      const allowed = rqs.filter((t) => t >= currentTime - WS);
-      if (allowed.length > AUTH_LIMIT) {
-        return res.status(429).json({ error: 'Too many requests' });
-      }
-      if (allowed.length > THROTTLE_LIMIT) {
-        await new Promise((res) => setTimeout(res, THROTTLE_DELAY));
-      }
-      await redis
-        .multi()
-        .lpush(key, currentTime)
-        .expire(key, W / 1000)
-        .exec();
-      next();
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return res
+        .status(429)
+        .json({ error: 'Too many api requests', cooldown: cooldown });
     }
-  };
+    await redis.zadd(key, currTime, currTime);
 
-const rateLimit =
-  (WS, RATE_LIMIT, THROTTLE_DELAY, THROTTLE_LIMIT) =>
-  async (req, res, next) => {
-    const currentTime = Date.now();
-    try {
-      const key = req.user.id;
-      const rqs = await redis.lrange(key, 0, -1);
-      const allowed = rqs.filter((t) => t >= currentTime - WS);
-      if (allowed.length > RATE_LIMIT) {
-        return res
-          .status(429)
-          .json({ error: 'Too many  attempts to authenticate' });
-      }
-      if (allowed.length > THROTTLE_LIMIT) {
-        await new Promise((res, rej) => setTimeout(res, THROTTLE_DELAY));
-      }
-      await redis
-        .multi()
-        .lpush(key, currentTime)
-        .expire(key, W / 1000)
-        .exec();
-      next();
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
-    }
-  };
+    next();
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error });
+  }
+};
+
+const rateLimit = limiter(RLIMIT, 'api');
+const authLimit = limiter(ALIMIT, 'auth');
 
 module.exports = { extractUser, rateLimit, authLimit };

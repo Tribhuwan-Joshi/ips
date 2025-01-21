@@ -20,9 +20,9 @@ app.get('/', (req, res) =>
 );
 // app.use('/stream', streamRouter);  testing router for streaming ( may use in future)
 
-app.use('/auth', authLimit(10, 5, 1, 3), authRouter); // I have hardcoded these values for demo purposes
+app.use('/auth', authLimit, authRouter); // I have hardcoded these values for demo purposes
 app.use(extractUser);
-app.use(rateLimit(20, 8, 3, 5));
+app.use(rateLimit);
 app.use('/users', userRouter);
 app.use('/images', imageRouter);
 
