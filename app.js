@@ -23,7 +23,7 @@ app.get('/', (req, res) =>
 app.use('/auth', authLimit, authRouter); // I have hardcoded these values for demo purposes
 app.use(extractUser);
 app.use(rateLimit);
-app.use('/users', userRouter);
+app.use('/user', userRouter);
 app.use('/images', imageRouter);
 
 module.exports = app;

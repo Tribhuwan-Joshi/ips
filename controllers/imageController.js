@@ -196,24 +196,25 @@ const shareImage = async (req, res) => {
 };
 
 const transformImage = async (req, res) => {
-  const id = parseInt(req.params.id);
-  if (!id)
-    return res.status(400).json({ error: 'Please provide id of the image' });
-  const image = await prisma.image.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      userId: true,
-      path: true,
-      publicLink: true,
-    },
-  });
-  if (!image || image.userId != req.user.id) {
-    return res.status(404).json({ error: 'Image not found. Invalid id' });
-  }
-  const transformations = req.body.transformations;
-  /*
+  try {
+    const id = parseInt(req.params.id);
+    if (!id)
+      return res.status(400).json({ error: 'Please provide id of the image' });
+    const image = await prisma.image.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        userId: true,
+        path: true,
+        publicLink: true,
+      },
+    });
+    if (!image || image.userId != req.user.id) {
+      return res.status(404).json({ error: 'Image not found. Invalid id' });
+    }
+    const transformations = req.body.transformations;
+    /*
 Resize - width , height
 Crop - width , height , x ,y
 Rotate - number
@@ -224,11 +225,10 @@ Compress
 Change format (JPEG, PNG, etc.) - string 
 Apply filters (grayscale, sepia, etc.) - grayscale,sepia
 */
-
-  const proc = ffmpeg(image.publicLink, { timeout: 10000 });
-  proc.format(transformations.format);
-  console.log(proc);
-  res.status(200).json({ url: image.publicLink, path: image.path });
+    res.status(200).json({ url: image.publicLink, path: image.path });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 module.exports = {
