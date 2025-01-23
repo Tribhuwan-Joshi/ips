@@ -32,7 +32,7 @@
 8. Storage limit for each user - store amount of storage used in DB
 
 9. Error handling and validation with unambigious response & status code
-10. RabbitMQ to process image transformation in queue
+10. RabbitMQ to process image transformation in queue [todo]
 
 ## APIs Endpoints
 
