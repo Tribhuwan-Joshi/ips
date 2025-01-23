@@ -1,5 +1,5 @@
 const multer = require('multer');
-const { saveImage } = require('../utils/helpers');
+const { saveImage, getTransformedImg } = require('../utils/helpers');
 const prisma = require('../prisma/prisma');
 const storage = require('../utils/storage');
 const redis = require('../utils/redisClient');
@@ -214,6 +214,12 @@ const transformImage = async (req, res) => {
       return res.status(404).json({ error: 'Image not found. Invalid id' });
     }
     const transformations = req.body.transformations;
+
+    const transformedImage = await getTransformedImg(
+      image,
+      transformations,
+      req
+    );
     /*
 Resize - width , height
 Crop - width , height , x ,y
@@ -225,7 +231,10 @@ Compress
 Change format (JPEG, PNG, etc.) - string 
 Apply filters (grayscale, sepia, etc.) - grayscale,sepia
 */
-    res.status(200).json({ url: image.publicLink, path: image.path });
+    res.status(200).json({
+      url: transformedImage.publicUrl,
+      storageLeft: transformedImage.storageLeft,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
