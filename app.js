@@ -6,7 +6,12 @@ const authRouter = require('./routers/authRouter');
 const morgan = require('morgan');
 const userRouter = require('./routers/userRouter');
 const imageRouter = require('./routers/imageRouter');
-const { extractUser, rateLimit, authLimit } = require('./utils/middlewares');
+const {
+  extractUser,
+  rateLimit,
+  authLimit,
+  errorHandler,
+} = require('./utils/middlewares');
 
 // const streamRouter = require('./routers/streamRouter');
 
@@ -25,5 +30,6 @@ app.use(extractUser);
 app.use(rateLimit);
 app.use('/user', userRouter);
 app.use('/images', imageRouter);
+app.use(errorHandler);
 
 module.exports = app;

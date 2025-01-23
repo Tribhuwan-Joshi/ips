@@ -17,22 +17,18 @@
 3. Retrieve image
 4. List all images - paginated response
 5. Delete specific image
-6. Transform image
+6. Transform image [Limited feature ~ Beta]
    - Resize
    - Crop
    - Rotate
-   - Watermark
    - Flip
-   - Mirror
-   - Compress
    - Change format
    - Apply filters
-7. Share specific image - generate a sharable link that can be access without authentication, expired after a certain time period
+7. Share specific image - generate a sharable link that can be `access without authentication` , expired after a certain `time period`.
 
-8. Storage limit for each user - store amount of storage used in DB
+8. Storage limit for each user - `store amount of storage used` in DB
 
 9. Error handling and validation with unambigious response & status code
-10. RabbitMQ to process image transformation in queue
 
 ## APIs Endpoints
 
@@ -108,5 +104,5 @@ GET /images/shared/:shareid;
 ```
 
 ```js
-GET / user / info; // return total storage and storage used
+DELETE / user; // delete the user -> needs jwt token in header
 ```
