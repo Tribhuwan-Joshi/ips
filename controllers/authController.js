@@ -2,6 +2,7 @@ const prisma = require('../prisma/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, REFRESH_SECRET } = require('../utils/config');
+require('express-async-errors');
 
 const handleRegister = async (req, res) => {
   try {

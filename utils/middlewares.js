@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET, WSIZE, RLIMIT, ALIMIT } = require('./config');
 const prisma = require('../prisma/prisma');
 const redis = require('./redisClient');
+require('express-async-errors');
 
 const extractUser = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -56,4 +57,9 @@ const limiter = (limit, group) => async (req, res, next) => {
 const rateLimit = limiter(RLIMIT, 'api');
 const authLimit = limiter(ALIMIT, 'auth');
 
-module.exports = { extractUser, rateLimit, authLimit };
+const errorHandler = async (err, req, res, next) => {
+  if (err) {
+    return res.status(500).json({ error: err });
+  }
+};
+module.exports = { extractUser, rateLimit, authLimit, errorHandler };

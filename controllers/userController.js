@@ -1,28 +1,30 @@
 const prisma = require('../prisma/prisma');
 const supabase = require('../utils/storage');
+require('express-async-errors');
 
 const deleteUser = async (req, res) => {
   try {
-    await prisma.$transaction(async (prisma) => {
-      const paths = await prisma.image.findMany({
+    const [paths, res] = await prisma.$transaction([
+      prisma.image.findMany({
         where: {
           userId: parseInt(req.user.id),
         },
         select: {
           path: true,
         },
-      });
-
-      await prisma.user.delete({
+      }),
+      prisma.user.delete({
         where: {
           id: req.user.id,
         },
-      });
-
-      console.log(paths, ' gonna get deleted');
-      await supabase.from('images').remove(paths);
-      console.log('removed');
-    });
+      }),
+    ]);
+    console.log(paths, ' gonna get deleted');
+    const mappedPath = paths.map((o) => o.path);
+    console.log(mappedPath);
+    if (res.error) console.log(res.error);
+    await supabase.from('images').remove(mappedPath);
+    console.log('removed');
 
     return res.sendStatus(204);
   } catch (error) {
