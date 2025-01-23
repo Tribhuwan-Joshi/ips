@@ -66,9 +66,6 @@ const getTransformedImg = async (image, transformation, req) => {
   if ('format' in transformation) {
     transformer = transformer.toFormat(transformation.format);
   }
-  if ('flip' in transformation) {
-    transformer = transformer.flip();
-  }
   if ('filters' in transformation) {
     // loop the object
     const filters = transformation.filters;
