@@ -71,7 +71,9 @@ const handleRefreshToken = async (req, res) => {
   try {
     // later replace it with error middleware
     const userInfo = jwt.verify(refreshtoken, REFRESH_SECRET);
-    const jwtToken = jwt.sign({ id: userInfo.id }, JWT_SECRET);
+    const jwtToken = jwt.sign({ id: userInfo.id }, JWT_SECRET, {
+      expiresIn: '1h',
+    });
 
     return res.status(200).json({ token: jwtToken });
   } catch (error) {

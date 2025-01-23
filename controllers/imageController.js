@@ -3,7 +3,7 @@ const { saveImage } = require('../utils/helpers');
 const prisma = require('../prisma/prisma');
 const storage = require('../utils/storage');
 const redis = require('../utils/redisClient');
-const ffmpeg = require('fluent-ffmpeg');
+
 const upload = multer({
   storage: multer.memoryStorage(),
 
