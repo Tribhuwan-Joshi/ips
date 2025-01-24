@@ -7,8 +7,8 @@
 - DB - Postgresql
 - ORM - Prisma
 - Authentication - JWT + refresh token
-- Rate limting & Cache - Redis
-- Transformation - FFMPEG
+- Rate limting & Cache - Redis - [ioredis](https://github.com/redis/ioredis)
+- Transformation - [Sharp](https://sharp.pixelplumbing.com/)
 
 ## Actions & Features
 
