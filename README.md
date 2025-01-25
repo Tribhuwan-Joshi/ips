@@ -14,7 +14,7 @@
 
 1. Signup/Login
 2. Upload image
-3. Retrieve image
+3. Retrieve image - LRU cache eviction policy
 4. List all images - paginated response
 5. Delete specific image
 6. Transform image [Limited feature ~ Beta]

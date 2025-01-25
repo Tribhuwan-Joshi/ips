@@ -1,6 +1,7 @@
 const Router = require('express').Router;
 const imageController = require('../controllers/imageController');
 const imageRouter = Router();
+require('express-async-errors');
 
 imageRouter.get('/shared/:id', imageController.getSharedImage);
 imageRouter.post('/:id/transform', imageController.transformImage);
