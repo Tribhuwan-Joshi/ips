@@ -210,11 +210,10 @@ const transformImage = async (req, res) => {
   }
 
   try {
-    // Find the image belonging to the authenticated user
     const image = await prisma.image.findFirst({
       where: {
         id: id,
-        userId: req.user.id, // Ensure the image belongs to the authenticated user
+        userId: req.user.id,
       },
     });
 
@@ -222,48 +221,38 @@ const transformImage = async (req, res) => {
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    // Fetch the image from Supabase storage using native fetch
     const response = await fetch(image.publicLink);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
 
-    // Convert the response to a buffer
     const arrayBuffer = await response.arrayBuffer();
     const imageBuffer = Buffer.from(arrayBuffer);
 
-    // Apply transformations using the helper function
     const outputFormat =
       req.body.transformations.format ||
       image.publicLink.split('.').pop().toLowerCase();
 
-    // Apply transformations using the helper function
     const transformer = addTransformation({
       ...req.body.transformations,
       format: outputFormat, // Ensure the format is always set
     });
 
-    // Pass the image buffer to the Sharp instance and get the transformed buffer
-    const transformedImageBuffer = await sharp(imageBuffer)
-      .pipe(transformer) // Pipe the image buffer through the transformer
-      .toBuffer();
+    const transformedImageBuffer = await sharp(imageBuffer).toBuffer();
 
-    // Calculate the size of the transformed image
     const transformedImageSize = transformedImageBuffer.length;
 
-    // Check if the user has enough storage left
     if (req.user.storageLeft < transformedImageSize) {
       return res.status(400).json({ error: 'Insufficient storage left' });
     }
 
-    // Upload the transformed image to Supabase storage
     const transformedImagePath = `${
       req.user.username
     }/transformed_${Date.now()}.${
       req.body.transformations.format || image.publicLink.split('.').pop()
     }`;
     const { error: uploadError } = await storage
-      .from('images') // Replace with your bucket name
+      .from('images')
       .upload(transformedImagePath, transformedImageBuffer, {
         contentType: `image/${outputFormat}`,
       });
@@ -275,19 +264,16 @@ const transformImage = async (req, res) => {
         .json({ error: 'Failed to upload transformed image' });
     }
 
-    // Get the public URL of the transformed image
     const {
       data: { publicUrl },
     } = storage.from('images').getPublicUrl(transformedImagePath);
 
-    // Update the user's storageLeft
     const updatedStorageLeft = req.user.storageLeft - transformedImageSize;
     await prisma.user.update({
       where: { id: req.user.id },
       data: { storageLeft: updatedStorageLeft },
     });
 
-    // Save the transformed image metadata to the database
     await prisma.image.create({
       data: {
         originalName: `transformed_${Date.now()}`,
@@ -298,7 +284,6 @@ const transformImage = async (req, res) => {
       },
     });
 
-    // Return the public URL and updated storageLeft
     res.status(200).json({
       transformedImageUrl: publicUrl,
       storageLeft: updatedStorageLeft,
