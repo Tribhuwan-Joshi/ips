@@ -10,6 +10,8 @@
 - Rate limiting & Cache - Redis - [ioredis](https://github.com/redis/ioredis)
 - Transformation - [Sharp](https://sharp.pixelplumbing.com/)
 
+Base URL - https://ips-ollj.onrender.com/
+
 ## Installation Guide
 
 ### Prerequisites
