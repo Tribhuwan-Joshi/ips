@@ -7,8 +7,71 @@
 - DB - Postgresql
 - ORM - Prisma
 - Authentication - JWT + refresh token
-- Rate limting & Cache - Redis - [ioredis](https://github.com/redis/ioredis)
+- Rate limiting & Cache - Redis - [ioredis](https://github.com/redis/ioredis)
 - Transformation - [Sharp](https://sharp.pixelplumbing.com/)
+
+## Installation Guide
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+- Node.js (Latest LTS version recommended)
+- PostgreSQL
+- Redis
+
+### Setup Instructions
+
+1. **Clone the repository**
+
+   ```sh
+   git clone https://github.com/yourusername/ips.git
+   cd ips
+   ```
+
+2. **Install dependencies**
+
+   ```sh
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Create a `.env` file in the root directory and configure it with the following variables (replace placeholders with actual values):
+
+   ```env
+   POSTGRES_USER="your_postgres_user"
+   POSTGRES_PASSWORD="your_postgres_password"
+   DATABASE_URL="postgresql://your_postgres_user:your_postgres_password@localhost:5432/your_database?schema=public"
+   JWT_SECRET="your_jwt_secret"
+   REFRESH_SECRET="your_refresh_secret"
+   STORAGE_URL="https://your_supabase_url/storage/v1"
+   API_KEY="your_supabase_api_key"
+   SHARE_SECRET="your_share_secret"
+   ```
+
+4. **Start PostgreSQL and Redis**
+
+   Make sure both services are running:
+
+   ```sh
+   sudo systemctl start postgresql
+   redis-server
+   ```
+
+5. **Run database migrations**
+
+   ```sh
+   npx prisma migrate dev --name init
+   ```
+
+6. **Start the server**
+
+   ```sh
+   npm start
+   ```
+
+   The server should now be running on `http://localhost:3000` (or the port specified in your environment variables).
 
 ## Actions & Features
 
@@ -24,13 +87,11 @@
    - Flip
    - Change format
    - Apply filters
-7. Share specific image - generate a sharable link that can be `access without authentication` , expired after a certain `time period`.
-
+7. Share specific image - generate a sharable link that can be `accessed without authentication`, expires after a certain `time period`.
 8. Storage limit for each user - `store amount of storage used` in DB
+9. Error handling and validation with unambiguous response & status code
 
-9. Error handling and validation with unambigious response & status code
-
-## APIs Endpoints
+## API Endpoints
 
 ```js
 GET /images/:id
@@ -104,5 +165,4 @@ GET /images/shared/:shareid;
 ```
 
 ```js
-DELETE / user; // delete the user -> needs jwt token in header
-```
+DELETE /user // delete the user -> needs JWT token in header
