@@ -21,8 +21,20 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.get('/', (req, res) =>
-  res.send('This is a image processing and upload service').status(200)
+  res.status(200).send(`
+    <html>
+      <body>
+      <h1>IPS</h1>
+        <p>This is the backend for the image processing and upload service.</p>
+        <p>Please use any API client (postman) to consume the API.</p>
+        <p>Visit the documentation: 
+          <a href="https://github.com/Tribhuwan-Joshi/ips" target="_blank">GitHub Docs</a>
+        </p>
+      </body>
+    </html>
+  `)
 );
+
 // app.use('/stream', streamRouter);  testing router for streaming ( may use in future)
 
 app.use('/auth', authLimit, authRouter); // I have hardcoded these values for demo purposes
